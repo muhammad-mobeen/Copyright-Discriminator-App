@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 # Custom Below
-/Copyrighted
-/Non-Copyrighted
+Copyrighted/**
+Non-Copyrighted/**
+
