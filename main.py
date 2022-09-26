@@ -1,3 +1,4 @@
+from socket import if_nameindex
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait  #..............
@@ -20,3 +21,9 @@ def gen_driver(self):
     # chrome_options.add_argument('--proxy-server=http://'+PROXY)
     driver = uc.Chrome(options=chrome_options)
     return driver
+
+ 
+if __name__ == "__main__":
+    print ("Executed when invoked directly")
+else:
+    print ("Executed when imported")
