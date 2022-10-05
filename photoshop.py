@@ -1,7 +1,17 @@
-import win32com.client
+import photoshop.api as ps
+# import win32com.client
+# from photoshop import Session
 import os
 
-psApp = win32com.client.Dispatch("Photoshop.Application")
 
-psApp.Open(r"D:\Github\Copyright-Discriminator-App\Images\1200px-Badshahi_Mosque_front_picture.jpg")
+# style 1
 
+# psApp = win32com.client.Dispatch("Photoshop.Application")
+
+# psApp.Open(os.getcwd() + r"\script_template.psd")
+
+# psApp.doJavaScript(os.getcwd() + r"\script.jsx")
+
+app = ps.Application()
+app.load(os.getcwd() + r"\script_template.psd")
+app.doJavaScript(os.getcwd() + r"\script.jsx")
