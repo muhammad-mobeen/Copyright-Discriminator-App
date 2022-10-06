@@ -1,6 +1,6 @@
 import photoshop.api as ps
 # import win32com.client
-# from photoshop import Session
+# from photoshopy import Session
 import os
 
 
@@ -14,4 +14,8 @@ import os
 
 app = ps.Application()
 app.load(os.getcwd() + r"\script_template.psd")
-app.doJavaScript(os.getcwd() + r"\script.jsx")
+jsx_file = os.getcwd() + r"\script.jsx"
+with open(jsx_file, "r") as f:
+    scripte = f.read()
+
+app.doJavaScript(scripte)
