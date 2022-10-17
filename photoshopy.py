@@ -50,6 +50,9 @@ class Photoshop_Manager:
         self.app.doJavaScript(ps_script)
         print("\nScript ran successfully. All Images edited!")
 
+    def exit(self):
+        self.doc.close()
+
 
 if __name__ == "__main__":
     agent = Photoshop_Manager()
@@ -58,3 +61,4 @@ if __name__ == "__main__":
     agent.arrange_layer_stack()
     agent.save_changes()
     agent.run_script()
+    agent.exit()
