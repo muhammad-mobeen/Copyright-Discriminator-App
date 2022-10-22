@@ -25,14 +25,33 @@ def gen_driver():
     return driver
 
 
-    
+class Governor:
+    def __init__(self):
+        self.driver = gen_driver()
+        self.images_list = os.listdir(os.getcwd()+ r"\Photoshoped_images")
+        self.pre_image_path = os.getcwd() + "\\Photoshoped_images\\"
+
+        self.initiate()
+        for img in self.images_list:
+            image_path = self.pre_image_path + img
+            self.search_img(image_path)
+            input()
+
+    def initiate(self):
+        self.driver.get("https://tineye.com/")
+
+
+    def search_img(self, image_path):
+        self.driver.find_element(By.XPATH, '//*[@id="upload_box"]').send_keys(image_path)
+
  
 if __name__ == "__main__":
-    driver = gen_driver()
-    driver.get("https://tineye.com/")
-    # driver.findElement(By.id("inputFile")).sendKeys("C:/path/to/file.jpg");
-    images_list = os.listdir(os.getcwd()+ r"\Photoshoped_images")
-    image_path = os.getcwd() + "\\Photoshoped_images\\" + images_list[1]
-    print(image_path)
-    driver.find_element(By.XPATH, '//*[@id="upload_box"]').send_keys(image_path)
-    input()
+    agency = Governor()
+    # driver = gen_driver()
+    # driver.get("https://tineye.com/")
+    # # driver.findElement(By.id("inputFile")).sendKeys("C:/path/to/file.jpg");
+    # images_list = os.listdir(os.getcwd()+ r"\Photoshoped_images")
+    # image_path = os.getcwd() + "\\Photoshoped_images\\" + images_list[1]
+    # print(image_path)
+    # driver.find_element(By.XPATH, '//*[@id="upload_box"]').send_keys(image_path)
+    # input()
