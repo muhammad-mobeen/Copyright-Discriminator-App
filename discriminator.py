@@ -1,3 +1,4 @@
+from itertools import count
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait  #..............
@@ -32,17 +33,30 @@ class Governor:
         self.pre_image_path = os.getcwd() + "\\Photoshoped_images\\"
 
         self.initiate()
-        for img in self.images_list:
+        for i, img in enumerate(self.images_list, 1):
             image_path = self.pre_image_path + img
-            self.search_img(image_path)
-            input()
+            self.search_img(i, image_path)
+            # input()
 
     def initiate(self):
         self.driver.get("https://tineye.com/")
 
 
-    def search_img(self, image_path):
+    def search_img(self, index, image_path):
         self.driver.find_element(By.XPATH, '//*[@id="upload_box"]').send_keys(image_path)
+        time.sleep(6)
+        print("[{}] Matching results found: {}".format(index,self.count_matches()))
+
+    def count_matches(self):
+        result = ""
+        try:
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="result_count"]')))
+            result = self.driver.find_element(By.XPATH, '//*[@id="result_count"]').text
+        except:
+            # result = self.driver.find_element(By.XPATH, '//*[@id="result_count"]').text
+            result = "0 matches found"
+        return result
+        
 
  
 if __name__ == "__main__":
