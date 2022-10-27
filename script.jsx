@@ -50,7 +50,7 @@ function main() {
 
     //Satutation Method Call
 
-    hueSaturation(60, -50, 0);
+    // hueSaturation(60, -50, 0);
 
     // Rotate Active Layer
 
