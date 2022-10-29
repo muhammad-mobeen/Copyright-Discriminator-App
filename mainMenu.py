@@ -1,7 +1,17 @@
-import tkinter as tk
-main_window = tk.Tk()
-main_window.geometry("600x400")
-main_window.title('Markhor Society')
-button = tk.Button(main_window, text='Stop', width=25, command=main_window.destroy)
-button.pack()
-main_window.mainloop()
+from PyQt5.QtWidgets import *
+from PyQt5 import uic
+
+
+class AppGUI(QMainWindow):
+    def __init__(self):
+        super(AppGUI, self).__init__()
+        uic.loadUi("app.ui", self)
+        self.show()
+
+def main():
+    app = QApplication([])
+    window = AppGUI()
+    app.exec_()
+
+if __name__=='__main__':
+    main()
