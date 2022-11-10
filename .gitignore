@@ -130,7 +130,7 @@ dmypy.json
 
 
 # Custom Below
-.pdf
+*.pdf
 l.py
 Copyrighted/
 Non-Copyrighted/
