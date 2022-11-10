@@ -1,3 +1,4 @@
+from multiprocessing import freeze_support
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait  #..............
@@ -14,8 +15,26 @@ import time
 # from webdriver_manager.chrome import ChromeDriverManager
 # from msvcrt import getche, getch
 import os
+import sys
 
 # url = "https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq=badshahi+mosque&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga"
+
+def logger(state):
+    if state == "on":
+        log_dir = os.getcwd() + r"\logs"
+        log_file = log_dir + r"\image_scraper.log"
+        # Cheks if folder is there or not
+        if not os.path.exists(log_dir):
+            # shutil.rmtree(log_dir)
+            os.makedirs(log_dir)
+        # Cheks if file is already there or not
+        if os.path.exists(log_file):
+            os.remove(log_file) # one file at a time
+        # Open file to start writing
+        sys.stdout = open(log_file, "w")
+    elif state == "off":
+        print("----------------------End of File----------------------")
+        sys.stdout.close()
 
 def gen_driver():
     chrome_options = uc.ChromeOptions()
@@ -26,10 +45,12 @@ def gen_driver():
 
 class ImagesScraper:
     def __init__(self):
+        logger("on") # Turning on the logger ;)
         self.driver = gen_driver()
         self.search_querry = None
 
-    def search(self):
+    def search(self, search_querry):
+        self.search_querry = search_querry
         querry = self.search_querry.replace(" ", "+")
 
         # HD Quality
@@ -76,7 +97,7 @@ class ImagesScraper:
            
             ## Set up the image URL and filename
             # filename = os.path.basename(extract_url.path)
-            file_name, file_extension = os.path.splitext(os.path.basename(extract_url.path))
+            filename, file_extension = os.path.splitext(os.path.basename(extract_url.path))
             if file_extension:
                 filename = self.search_querry + " " + str(i) + file_extension
             else:
@@ -105,12 +126,14 @@ class ImagesScraper:
             else:
                 print('[{}] Image Couldn\'t be retreived: {}'.format(i, image_url))
 
+        logger("off") # Turning logger off ;(
+
  
 if __name__ == "__main__":
     scrapeman = ImagesScraper()
     print("Enter the search term: ", end="")
-    scrapeman.search_querry = input()
-    scrapeman.search()
+    # scrapeman.search_querry = input()
+    scrapeman.search(input())
     imgurls = scrapeman.fetch_image_urls(8)
     # print(imgurls)
     scrapeman.dowload_images(imgurls)
