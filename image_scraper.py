@@ -9,15 +9,19 @@ from urllib.parse import urlparse
 # from bs4 import BeautifulSoup
 # import xlsxwriter
 import time
+import func_timeout
+import multiprocessing
 # from selenium.webdriver.common.proxy import Proxy, ProxyType  #.................
 # from selenium.webdriver.chrome.options import Options
 # from selenium.webdriver.chrome.service import Service
 # from webdriver_manager.chrome import ChromeDriverManager
 # from msvcrt import getche, getch
+from openpyxl import load_workbook
 import os
 import sys
 
 # url = "https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq=badshahi+mosque&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga"
+
 
 def logger(state):
     if state == "on":
@@ -45,9 +49,56 @@ def gen_driver():
 
 class ImagesScraper:
     def __init__(self):
-        logger("on") # Turning on the logger ;)
+        # logger("on") # Turning on the logger ;)
         self.driver = gen_driver()
+        self.wb = load_workbook(filename = os.getcwd() + r'\places.xlsx', read_only=True)
+        self.dirManager('Images','replace')
+        self.sheets = self.wb.worksheets
+        self.search_kw_list = None
         self.search_querry = None
+        self.imgurls = None
+
+    def search_querry_manager(self, kw):
+        if kw[0].lower() in kw[1].lower():
+            return kw[1]
+        else:
+            return kw[1] + " " + kw[0]
+
+    def xlsxManager(self):
+        for index in range(len(self.sheets)):
+            self.sheetReader(index)
+            print("\n\n----------------------------------------------------------------------------------------")
+            print("Scraping List of Places from: {}".format(self.search_kw_list[0]))
+            for kw in self.search_kw_list[1:]:  # [1:] Coz first element is name of country
+                print("-----------------")
+                search_querry = self.search_querry_manager(kw)
+                print("Search Keyword: {}".format(search_querry))
+                self.search(search_querry)
+                self.fetch_image_urls(4)
+
+                # self.dowload_images(kw)
+                try:
+                    func_timeout.func_timeout(30, self.dowload_images, args=[kw])
+                except func_timeout.FunctionTimedOut:
+                    print('-././-./-.-/-/.-:: 30s completed but process did not complete. Skipping>>>>')
+                    continue
+                except Exception as e:
+                    print("Coudn't dowload image, something went wrong: {}\nSkipping>>>>>>>".format(e))
+                    continue
+
+    def sheetReader(self, index):
+        # sheets_name = wb.sheetnames
+        # sheets = self.wb.worksheets
+        # sheetnames = [sheet.title for sheet in sheets]
+        # for sheet in sheets:
+        data_from_sheet = self.sheets[index]._cells_by_row(min_col=2,max_col=3,min_row=2,max_row=200)
+        print(data_from_sheet)
+        places_kw_list = [self.sheets[index].title]
+        for data in data_from_sheet:
+            if data[0].value and data[1].value:
+                places_kw_list.append((data[0].value, data[1].value))
+        
+        self.search_kw_list = places_kw_list  # Return
 
     def search(self, search_querry):
         self.search_querry = search_querry
@@ -71,73 +122,100 @@ class ImagesScraper:
         # driver.find_elements(By.CSS_SELECTOR, '#__ZONE__main > div > div > div.main-categories.lohp-row.max-width-container > ul > li > a')
         imgurls = []
         for i in range(1,quantity+1):
-            img_card = self.driver.find_element(By.XPATH, '//*[@id="islrg"]/div[1]/div[%s]/a[1]/div[1]/img'%(str(i)))
-            img_card.click()
-            time.sleep(6)
-            popup_class = self.driver.find_elements(By.CLASS_NAME, 'n3VNCb')
-            for popup in popup_class:
-                imgurl = popup.get_attribute("src")
-                if(("http" in  imgurl) and (not "encrypted" in imgurl)):
-                    imgurls.append(imgurl)
-                    print("[{}] Fetched Image url: {}".format(i,imgurl))
-        return(imgurls)
+            try:
+                img_card = self.driver.find_element(By.XPATH, '//*[@id="islrg"]/div[1]/div[%s]/a[1]/div[1]/img'%(str(i)))
+                img_card.click()
+                time.sleep(6)
+                popup_class = self.driver.find_elements(By.CLASS_NAME, 'n3VNCb')
+                for popup in popup_class:
+                    imgurl = popup.get_attribute("src")
+                    if "http" in  imgurl and not "encrypted" in imgurl and not "base64" in imgurl:
+                        imgurls.append(imgurl)
+                        print("[{}] Fetched Image url: {}".format(i,imgurl))
+            except Exception as e:
+                print("Error During URL Fetch: {}\nSkipping>>>>>>>".format(e))
+                continue
 
-    def dowload_images(self, imgurls):
+        self.imgurls = imgurls    # Return
+
+    def dirManager(self, dir, mode=None):
+        if mode == "replace":
+            if os.path.exists(dir):
+                shutil.rmtree(dir)
+            os.makedirs(dir)
+        else:
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+
+    def dowload_images(self, kw):
         # Creates a new folder to save the images. If already exists, Overwrites it.
         images_dir = 'Images'
-        if os.path.exists(images_dir):
-            shutil.rmtree(images_dir)
-        os.makedirs(images_dir)
+        sub_img_dir = 'Images\\' + self.search_kw_list[0]
+        sub_sub_img_dir = sub_img_dir + '\\' + kw[0]
+        sub_sub_sub_img_dir = sub_sub_img_dir + '\\' + self.search_querry
+        self.dirManager(sub_img_dir)
+        self.dirManager(sub_sub_img_dir)
+        self.dirManager(sub_sub_sub_img_dir)
+        print("Saving Images at: {}".format(sub_sub_img_dir))
 
         downloaded_images = []
 
-        for i, image_url in enumerate(imgurls,1):
-            #extact filename without extension from URL
-            extract_url = urlparse(image_url)
-           
-            ## Set up the image URL and filename
-            # filename = os.path.basename(extract_url.path)
-            filename, file_extension = os.path.splitext(os.path.basename(extract_url.path))
-            if file_extension:
-                filename = self.search_querry + " " + str(i) + file_extension
-            else:
-                filename = self.search_querry + " " + str(i) + ".jpg"
+        for i, image_url in enumerate(self.imgurls,1):
+            try:
+                #extact filename without extension from URL
+                extract_url = urlparse(image_url)
+            
+                ## Set up the image URL and filename
+                # filename = os.path.basename(extract_url.path)
+                filename, file_extension = os.path.splitext(os.path.basename(extract_url.path))
+                if file_extension:
+                    filename = self.search_querry + " " + str(i) + file_extension
+                else:
+                    filename = self.search_querry + " " + str(i) + ".jpg"
 
-            # if similar name exists, don't overwrite please
-            # if filename in downloaded_images:
-            #     filename = str(i) + filename
-            # else:
-            #     downloaded_images.append(filename)
+                # if similar name exists, don't overwrite please
+                # if filename in downloaded_images:
+                #     filename = str(i) + filename
+                # else:
+                #     downloaded_images.append(filename)
 
-            # Open the url image, set stream to True, this will return the stream content.
-            r = requests.get(image_url, stream = True)
+                # Open the url image, set stream to True, this will return the stream content.
+                r = requests.get(image_url, stream = True)
 
-            # Check if the image was retrieved successfully
-            if r.status_code == 200:
-                # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
-                r.raw.decode_content = True
-                
-                # Open a local file with wb ( write binary ) permission.
-                save_image_dir = os.path.join(os.getcwd(), os.path.join(images_dir, filename))
-                with open(save_image_dir,'wb') as f:
-                    shutil.copyfileobj(r.raw, f)
+                # Check if the image was retrieved successfully
+                if r.status_code == 200:
+                    # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
+                    r.raw.decode_content = True
                     
-                print('[{}] Image sucessfully Downloaded: {}'.format(i, filename))
-            else:
-                print('[{}] Image Couldn\'t be retreived: {}'.format(i, image_url))
+                    # Open a local file with wb ( write binary ) permission.
+                    save_image_dir = os.path.join(os.getcwd(), os.path.join(sub_sub_sub_img_dir, filename))
+                    with open(save_image_dir,'wb') as f:
+                        shutil.copyfileobj(r.raw, f)
+                        
+                    print('[{}] Image sucessfully Downloaded: {}'.format(i, filename))
+                else:
+                    print('[{}] Image Couldn\'t be retreived: {}'.format(i, image_url))
+            except Exception as e:
+                    print("Error During Downloading: {}\nSkipping>>>>>>>".format(e))
+                    continue
 
-        logger("off") # Turning logger off ;(
+        # logger("off") # Turning logger off ;(
 
  
 if __name__ == "__main__":
+    start_time = time.time()
     scrapeman = ImagesScraper()
-    print("Enter the search term: ", end="")
-    # scrapeman.search_querry = input()
-    scrapeman.search(input())
-    imgurls = scrapeman.fetch_image_urls(8)
-    # print(imgurls)
-    scrapeman.dowload_images(imgurls)
-    # search_querry.replace(" ", "+")
-    # driver = gen_driver()
-    # driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga".format(search_querry))
+    scrapeman.xlsxManager()
+    end_time = time.time() - start_time
+    print("--- %s seconds ---" % (end_time))
+    print("Program took: {} minutes".format(end_time/60))
+    # print("Enter the search term: ", end="")
+    # # scrapeman.search_querry = input()
+    # scrapeman.search(input())
+    # scrapeman.fetch_image_urls(8)
+    # # print(imgurls)
+    # scrapeman.dowload_images()
+    # # search_querry.replace(" ", "+")
+    # # driver = gen_driver()
+    # # driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga".format(search_querry))
     
