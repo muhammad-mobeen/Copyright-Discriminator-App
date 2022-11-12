@@ -40,51 +40,66 @@ def logger(state):
         print("----------------------End of File----------------------")
         sys.stdout.close()
 
-def gen_driver():
-    chrome_options = uc.ChromeOptions()
-    chrome_options.headless = True
-    # chrome_options.add_argument('--proxy-server=http://'+PROXY)
-    driver = uc.Chrome(options=chrome_options)
-    return driver
-
-class ImagesScraper:
+class XlsxManager:
     def __init__(self):
-        # logger("on") # Turning on the logger ;)
-        self.driver = gen_driver()
         self.wb = load_workbook(filename = os.getcwd() + r'\places.xlsx', read_only=True)
-        self.dirManager('Images','replace')
         self.sheets = self.wb.worksheets
         self.search_kw_list = None
-        self.search_querry = None
-        self.imgurls = None
 
-    def search_querry_manager(self, kw):
-        if kw[0].lower() in kw[1].lower():
-            return kw[1]
+    def dirManager(self, dir, mode=None):
+        if mode == "replace":
+            if os.path.exists(dir):
+                shutil.rmtree(dir)
+            os.makedirs(dir)
         else:
-            return kw[1] + " " + kw[0]
+            if not os.path.exists(dir):
+                os.makedirs(dir)
 
     def xlsxManager(self):
+        # imgScraper1 = ImagesScraper()
+        # imgScraper2 = ImagesScraper()
+        self.dirManager('Images','replace')
         for index in range(len(self.sheets)):
             self.sheetReader(index)
             print("\n\n----------------------------------------------------------------------------------------")
-            print("Scraping List of Places from: {}".format(self.search_kw_list[0]))
-            for kw in self.search_kw_list[1:]:  # [1:] Coz first element is name of country
-                print("-----------------")
-                search_querry = self.search_querry_manager(kw)
-                print("Search Keyword: {}".format(search_querry))
-                self.search(search_querry)
-                self.fetch_image_urls(4)
-
-                # self.dowload_images(kw)
-                try:
-                    func_timeout.func_timeout(30, self.dowload_images, args=[kw])
-                except func_timeout.FunctionTimedOut:
-                    print('-././-./-.-/-/.-:: 30s completed but process did not complete. Skipping>>>>')
-                    continue
-                except Exception as e:
-                    print("Coudn't dowload image, something went wrong: {}\nSkipping>>>>>>>".format(e))
-                    continue
+            print("[{}/{}] Scraping List of Places from: {}".format(index,len(self.sheets),self.search_kw_list[0]))
+            # imgScraper1.scraper_manager(self.search_kw_list)
+            process_div = len(self.search_kw_list)//6
+            search_kw_list1 = [x for x in self.search_kw_list[:process_div]]
+            search_kw_list2 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div:process_div*2]]
+            search_kw_list3 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div*2:process_div*3]]
+            search_kw_list4 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div*3:process_div*4]]
+            search_kw_list5 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div*4:process_div*5]]
+            search_kw_list6 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div*5:]]
+            p1 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list1,))
+            p2 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list2,))
+            p3 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list3,))
+            p4 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list4,))
+            p5 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list5,))
+            p6 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list6,))
+            p1.start()
+            print("P1 started")
+            p2.start()
+            print("P2 started")
+            p3.start()
+            print("P3 started")
+            p4.start()
+            print("P4 started")
+            p5.start()
+            print("P5 started")
+            p6.start()
+            print("P6 started")
+            p1.join()
+            p2.join()
+            p3.join()
+            p4.join()
+            p5.join()
+            p6.join()
+            # for kw in self.search_kw_list[1:]:  # [1:] Coz first element is name of country
+            #     print("-----------------")
+            #     search_querry = self.search_querry_manager(kw)
+            #     print("Search Keyword: {}".format(search_querry))
+            #     self.scraper_manager(kw)  # Parsing kw instead of search_querry coz life happens............
 
     def sheetReader(self, index):
         # sheets_name = wb.sheetnames
@@ -99,6 +114,48 @@ class ImagesScraper:
                 places_kw_list.append((data[0].value, data[1].value))
         
         self.search_kw_list = places_kw_list  # Return
+
+class ImagesScraper:
+    def __init__(self, search_kw_list):
+        # logger("on") # Turning on the logger ;)
+        self.driver = self.gen_driver()
+        self.dirManager('Images')
+        self.search_kw_list = search_kw_list
+        self.search_querry = None
+        self.imgurls = None
+        self.image_quantity = 4
+
+        self.scraper_manager()
+
+    def gen_driver(self):
+        chrome_options = uc.ChromeOptions()
+        chrome_options.headless = True
+        # chrome_options.add_argument('--proxy-server=http://'+PROXY)
+        driver = uc.Chrome(options=chrome_options)
+        return driver  
+
+    def search_querry_manager(self, kw):
+        if kw[0].lower() in kw[1].lower():
+            return kw[1]
+        else:
+            return kw[1] + " " + kw[0]
+
+    def scraper_manager(self):
+        # self.search_kw_list = search_kw_list
+        for i, kw in enumerate(self.search_kw_list[1:],1):   # [1:] Coz first element is name of country
+            search_querry = self.search_querry_manager(kw)
+            print("-----------------")
+            print("[{}/{}] Search Keyword: {}".format(i,len(self.search_kw_list)-1,search_querry))
+
+            self.search(search_querry)
+            self.fetch_image_urls(self.image_quantity)
+            try:
+                # self.dowload_images(kw)
+                func_timeout.func_timeout(30, self.dowload_images, args=[kw])
+            except func_timeout.FunctionTimedOut:
+                print('-./>>>>>>>>>/-/.-:: 30s completed but process did not complete. Skipping>>>>')
+            except Exception as e:
+                print("Coudn't dowload image, something went wrong: {}\nSkipping>>>>>>>".format(e))
 
     def search(self, search_querry):
         self.search_querry = search_querry
@@ -190,11 +247,16 @@ class ImagesScraper:
                     # Open a local file with wb ( write binary ) permission.
                     save_image_dir = os.path.join(os.getcwd(), os.path.join(sub_sub_sub_img_dir, filename))
                     with open(save_image_dir,'wb') as f:
-                        shutil.copyfileobj(r.raw, f)
+                        try:
+                            # shutil.copyfileobj(r.raw, f)
+                            func_timeout.func_timeout(30, shutil.copyfileobj, args=[r.raw, f])
+                        except func_timeout.FunctionTimedOut:
+                            print('-././-./-.-/-/.-:: 30s completed but process did not complete. Skipping>>>>')
+                            raise Exception("30s Timeout!")
                         
                     print('[{}] Image sucessfully Downloaded: {}'.format(i, filename))
                 else:
-                    print('[{}] Image Couldn\'t be retreived: {}'.format(i, image_url))
+                    print('[{}] [Status Code: {}] Image Couldn\'t be retreived: {}'.format(i, r.status_code, image_url))
             except Exception as e:
                     print("Error During Downloading: {}\nSkipping>>>>>>>".format(e))
                     continue
@@ -204,7 +266,7 @@ class ImagesScraper:
  
 if __name__ == "__main__":
     start_time = time.time()
-    scrapeman = ImagesScraper()
+    scrapeman = XlsxManager()
     scrapeman.xlsxManager()
     end_time = time.time() - start_time
     print("--- %s seconds ---" % (end_time))
