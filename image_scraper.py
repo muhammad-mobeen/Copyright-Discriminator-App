@@ -44,7 +44,7 @@ class XlsxManager:
     def __init__(self):
         self.wb = load_workbook(filename = os.getcwd() + r'\places.xlsx', read_only=True)
         self.sheets = self.wb.worksheets
-        self.search_kw_list = None
+        # self.search_kw_list = None
 
     def dirManager(self, dir, mode=None):
         if mode == "replace":
@@ -59,47 +59,38 @@ class XlsxManager:
         # imgScraper1 = ImagesScraper()
         # imgScraper2 = ImagesScraper()
         self.dirManager('Images','replace')
-        for index in range(len(self.sheets)):
-            self.sheetReader(index)
-            print("\n\n----------------------------------------------------------------------------------------")
-            print("[{}/{}] Scraping List of Places from: {}".format(index,len(self.sheets),self.search_kw_list[0]))
-            # imgScraper1.scraper_manager(self.search_kw_list)
-            process_div = len(self.search_kw_list)//6
-            search_kw_list1 = [x for x in self.search_kw_list[:process_div]]
-            search_kw_list2 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div:process_div*2]]
-            search_kw_list3 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div*2:process_div*3]]
-            search_kw_list4 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div*3:process_div*4]]
-            search_kw_list5 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div*4:process_div*5]]
-            search_kw_list6 = [self.search_kw_list[0]] + [x for x in self.search_kw_list[process_div*5:]]
-            p1 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list1,))
-            p2 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list2,))
-            p3 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list3,))
-            p4 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list4,))
-            p5 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list5,))
-            p6 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list6,))
-            p1.start()
-            print("P1 started")
-            p2.start()
-            print("P2 started")
-            p3.start()
-            print("P3 started")
-            p4.start()
-            print("P4 started")
-            p5.start()
-            print("P5 started")
-            p6.start()
-            print("P6 started")
-            p1.join()
-            p2.join()
-            p3.join()
-            p4.join()
-            p5.join()
-            p6.join()
-            # for kw in self.search_kw_list[1:]:  # [1:] Coz first element is name of country
-            #     print("-----------------")
-            #     search_querry = self.search_querry_manager(kw)
-            #     print("Search Keyword: {}".format(search_querry))
-            #     self.scraper_manager(kw)  # Parsing kw instead of search_querry coz life happens............
+        if len(self.sheets)%2 == 0:
+            for index in range(0, len(self.sheets), 2):
+                search_kw_list1 = self.sheetReader(index)
+                search_kw_list2 = self.sheetReader(index+1)
+                p1 = multiprocessing.Process(target=sheetManager, args=(index, len(self.sheets), search_kw_list1,))
+                p2 = multiprocessing.Process(target=sheetManager, args=(index+1, len(self.sheets), search_kw_list2,))
+                p1.start()
+                print("P1 started")
+                p2.start()
+                print("P2 started")
+                p1.join()
+                p2.join()
+        else:
+            for index in range(0, len(self.sheets), 2):
+                # sheets = self.sheets
+                if len(self.sheets)-1 == index:
+                    search_kw_list1 = self.sheetReader(index)
+                    p1 = multiprocessing.Process(target=sheetManager, args=(index, len(self.sheets), search_kw_list1,))
+                    p1.start()
+                    print("P1 started")
+                    p1.join()
+                else:
+                    search_kw_list1 = self.sheetReader(index)
+                    search_kw_list2 = self.sheetReader(index+1)
+                    p1 = multiprocessing.Process(target=sheetManager, args=(index, len(self.sheets), search_kw_list1,))
+                    p2 = multiprocessing.Process(target=sheetManager, args=(index+1, len(self.sheets), search_kw_list2,))
+                    p1.start()
+                    print("P1 started")
+                    p2.start()
+                    print("P2 started")
+                    p1.join()
+                    p2.join()
 
     def sheetReader(self, index):
         # sheets_name = wb.sheetnames
@@ -113,7 +104,50 @@ class XlsxManager:
             if data[0].value and data[1].value:
                 places_kw_list.append((data[0].value, data[1].value))
         
-        self.search_kw_list = places_kw_list  # Return
+        return places_kw_list  # Return
+            
+class sheetManager:
+    def __init__(self, index, sheets_len, search_kw_list):
+        print("\n\n----------------------------------------------------------------------------------------")
+        print("[{}/{}] Scraping List of Places from: {}".format(index+1,sheets_len,search_kw_list[0]))
+        # imgScraper1.scraper_manager(search_kw_list)
+        process_div = len(search_kw_list)//6
+        search_kw_list1 = [x for x in search_kw_list[:process_div]]
+        search_kw_list2 = [search_kw_list[0]] + [x for x in search_kw_list[process_div:process_div*2]]
+        search_kw_list3 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*2:process_div*3]]
+        search_kw_list4 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*3:process_div*4]]
+        search_kw_list5 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*4:process_div*5]]
+        search_kw_list6 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*5:]]
+        sp1 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list1,))
+        sp2 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list2,))
+        sp3 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list3,))
+        sp4 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list4,))
+        sp5 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list5,))
+        sp6 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list6,))
+        sp1.start()
+        print("SP1 started")
+        sp2.start()
+        print("SP2 started")
+        sp3.start()
+        print("SP3 started")
+        sp4.start()
+        print("SP4 started")
+        sp5.start()
+        print("SP5 started")
+        sp6.start()
+        print("SP6 started")
+        sp1.join()
+        sp2.join()
+        sp3.join()
+        sp4.join()
+        sp5.join()
+        sp6.join()
+        # for kw in search_kw_list[1:]:  # [1:] Coz first element is name of country
+        #     print("-----------------")
+        #     search_querry = self.search_querry_manager(kw)
+        #     print("Search Keyword: {}".format(search_querry))
+        #     self.scraper_manager(kw)  # Parsing kw instead of search_querry coz life happens............
+
 
 class ImagesScraper:
     def __init__(self, search_kw_list):
@@ -150,10 +184,10 @@ class ImagesScraper:
             self.search(search_querry)
             self.fetch_image_urls(self.image_quantity)
             try:
-                # self.dowload_images(kw)
-                func_timeout.func_timeout(30, self.dowload_images, args=[kw])
-            except func_timeout.FunctionTimedOut:
-                print('-./>>>>>>>>>/-/.-:: 30s completed but process did not complete. Skipping>>>>')
+                self.dowload_images(kw)
+                # func_timeout.func_timeout(30, self.dowload_images, args=[kw])
+            # except func_timeout.FunctionTimedOut:
+            #     print('-./>>>>>>>>>/-/.-:: 30s completed but process did not complete. Skipping>>>>')
             except Exception as e:
                 print("Coudn't dowload image, something went wrong: {}\nSkipping>>>>>>>".format(e))
 
@@ -217,6 +251,9 @@ class ImagesScraper:
 
         downloaded_images = []
 
+        def requestsGet(image_url):
+            return requests.get(image_url, stream = True)
+
         for i, image_url in enumerate(self.imgurls,1):
             try:
                 #extact filename without extension from URL
@@ -236,8 +273,13 @@ class ImagesScraper:
                 # else:
                 #     downloaded_images.append(filename)
 
-                # Open the url image, set stream to True, this will return the stream content.
-                r = requests.get(image_url, stream = True)
+                try:
+                    # Open the url image, set stream to True, this will return the stream content.
+                    r = func_timeout.func_timeout(30, requestsGet, args=[image_url])
+                except func_timeout.FunctionTimedOut:
+                    print('-./>>>>>>>>>/-/.-:: 30s completed but no requests were gotten. Skipping>>>>')
+                    raise Exception("30s Timeout!")
+                # r = requestsGet(image_url)
 
                 # Check if the image was retrieved successfully
                 if r.status_code == 200:
@@ -251,7 +293,7 @@ class ImagesScraper:
                             # shutil.copyfileobj(r.raw, f)
                             func_timeout.func_timeout(30, shutil.copyfileobj, args=[r.raw, f])
                         except func_timeout.FunctionTimedOut:
-                            print('-././-./-.-/-/.-:: 30s completed but process did not complete. Skipping>>>>')
+                            print("-././-./-.-/-/.-:: 30s completed but image could'nt be downloaded. Skipping>>>>")
                             raise Exception("30s Timeout!")
                         
                     print('[{}] Image sucessfully Downloaded: {}'.format(i, filename))
