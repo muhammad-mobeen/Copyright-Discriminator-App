@@ -120,7 +120,7 @@ function main() {
 
     var outPath = outFolder.path;
 
-    var fName = "Photoshoped_images"; // define folder name
+    var fName = "Photoshoped_images_temp"; // define folder name
 
     var f = new Folder(outPath + "/" + fName);
 
