@@ -37,6 +37,10 @@ class Administrator:
                     self.ps_driver(images_dir)
                     self.rename_images(place)  # Since images name are based on place names
                     self.scopify_images(country, city, place)
+        # Delete temp data
+        if os.path.exists(self.ps_imgs_dir_temp):
+            shutil.rmtree(self.ps_imgs_dir_temp)
+            print("Successfully Deleted Temporary Photoshoped Data..........>>>>>")
     
     def ps_driver(self, images_dir):
         self.psm.remove_prev_clutter()
@@ -107,15 +111,22 @@ class Photoshop_Manager:
     def import_images(self, images_dir):
         print("\nImporting Images_________________________________")
         images_list = os.listdir(images_dir)
+
         for img in images_list:
-            extension = os.path.splitext(img)[1]
-            if not extension in self.extensions_to_avoid:
-                self.desc.putPath(self.app.charIDToTypeID("null"), images_dir + "\\" + img)
-                event_id = self.app.charIDToTypeID("Plc ")  # `Plc` need one space in here.
-                self.app.executeAction(event_id, self.desc)
-                print("{} Imported!".format(img))
-            else:
-                print("XXXX Image: {} was avoided because of unsupported format!".format(img))
+            try:  # Supported Formats try
+                extension = os.path.splitext(img)[1]
+                if not extension in self.extensions_to_avoid:
+                    self.desc.putPath(self.app.charIDToTypeID("null"), images_dir + "\\" + img)
+                    event_id = self.app.charIDToTypeID("Plc ")  # `Plc` need one space in here.
+                    self.app.executeAction(event_id, self.desc)
+                    print("{} Imported!".format(img))
+                else:
+                    self.app.beep()
+                    print("XXXX Image: {} was avoided because of unsupported format!".format(img))
+            except Exception as e:
+                self.app.beep()
+                print("ERROR Importing {}: {}".format(img, e))
+            
         print("All Images Imported Successfully_________________")
 
     def arrange_layer_stack(self):
