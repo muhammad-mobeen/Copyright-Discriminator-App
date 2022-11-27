@@ -111,19 +111,19 @@ class sheetManager:
         print("\n\n----------------------------------------------------------------------------------------")
         print("[{}/{}] Scraping List of Places from: {}".format(index+1,sheets_len,search_kw_list[0]))
         # imgScraper1.scraper_manager(search_kw_list)
-        process_div = len(search_kw_list)//6
+        process_div = len(search_kw_list)//4
         search_kw_list1 = [x for x in search_kw_list[:process_div]]
         search_kw_list2 = [search_kw_list[0]] + [x for x in search_kw_list[process_div:process_div*2]]
         search_kw_list3 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*2:process_div*3]]
-        search_kw_list4 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*3:process_div*4]]
-        search_kw_list5 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*4:process_div*5]]
-        search_kw_list6 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*5:]]
+        search_kw_list4 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*3:]]
+        # search_kw_list5 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*4:process_div*5]]
+        # search_kw_list6 = [search_kw_list[0]] + [x for x in search_kw_list[process_div*5:]]
         sp1 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list1,))
         sp2 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list2,))
         sp3 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list3,))
         sp4 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list4,))
-        sp5 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list5,))
-        sp6 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list6,))
+        # sp5 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list5,))
+        # sp6 = multiprocessing.Process(target=ImagesScraper, args=(search_kw_list6,))
         sp1.start()
         print("SP1 started")
         sp2.start()
@@ -132,16 +132,16 @@ class sheetManager:
         print("SP3 started")
         sp4.start()
         print("SP4 started")
-        sp5.start()
-        print("SP5 started")
-        sp6.start()
-        print("SP6 started")
+        # sp5.start()
+        # print("SP5 started")
+        # sp6.start()
+        # print("SP6 started")
         sp1.join()
         sp2.join()
         sp3.join()
         sp4.join()
-        sp5.join()
-        sp6.join()
+        # sp5.join()
+        # sp6.join()
         # for kw in search_kw_list[1:]:  # [1:] Coz first element is name of country
         #     print("-----------------")
         #     search_querry = self.search_querry_manager(kw)
@@ -308,10 +308,8 @@ class ImagesScraper:
  
 if __name__ == "__main__":
     start_time = time.time()
-    # -----------------------Start--------------------------- #
     scrapeman = XlsxManager()
     scrapeman.xlsxManager()
-    # ------------------------End---------------------------- #
     end_time = time.time() - start_time
     print("--- %s seconds ---" % (end_time))
     print("Program took: {} minutes".format(end_time/60))

@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPixmap
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QCursor
 
-from image_scraper import *
+from image_scraperr import *
 
 
 def transfer(search_txt):
