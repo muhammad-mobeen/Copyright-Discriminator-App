@@ -308,8 +308,10 @@ class ImagesScraper:
  
 if __name__ == "__main__":
     start_time = time.time()
+    # -----------------------Start--------------------------- #
     scrapeman = XlsxManager()
     scrapeman.xlsxManager()
+    # ------------------------End---------------------------- #
     end_time = time.time() - start_time
     print("--- %s seconds ---" % (end_time))
     print("Program took: {} minutes".format(end_time/60))
