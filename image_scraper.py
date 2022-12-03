@@ -162,11 +162,14 @@ class ImagesScraper:
         self.scraper_manager()
 
     def gen_driver(self):
-        chrome_options = uc.ChromeOptions()
-        chrome_options.headless = True
-        # chrome_options.add_argument('--proxy-server=http://'+PROXY)
-        driver = uc.Chrome(options=chrome_options)
-        return driver  
+        try:
+            chrome_options = uc.ChromeOptions()
+            chrome_options.headless = True
+            # chrome_options.add_argument('--proxy-server=http://'+PROXY)
+            driver = uc.Chrome(options=chrome_options)
+            return driver
+        except Exception as e:
+            print("Error in Driver: ",e)
 
     def search_querry_manager(self, kw):
         if kw[0].lower() in kw[1].lower():
@@ -192,20 +195,25 @@ class ImagesScraper:
                 print("Coudn't dowload image, something went wrong: {}\nSkipping>>>>>>>".format(e))
 
     def search(self, search_querry):
-        self.search_querry = search_querry
-        querry = self.search_querry.replace(" ", "+")
+        try:
+            self.search_querry = search_querry
+            querry = self.search_querry.replace(" ", "+")
 
-        # HD Quality
-        # self.driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga".format(querry))
-        
-        # HD + Wide
-        # self.driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga,iar:w".format(querry))
-        
-        # HD + Type:Photo
-        self.driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga,itp:photo".format(querry))
-        
-        # HD + Wide + Type:Photo
-        # self.driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga,itp:photo,iar:w".format(querry))
+            # HD Quality
+            # self.driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga".format(querry))
+            
+            # HD + Wide
+            # self.driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga,iar:w".format(querry))
+            
+            # HD + Type:Photo
+            self.driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga,itp:photo".format(querry))
+            
+            # HD + Wide + Type:Photo
+            # self.driver.get("https://www.google.com/search?as_st=y&tbm=isch&as_q=&as_epq={}&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:xga,itp:photo,iar:w".format(querry))
+        except Exception as e:
+            print("Error in getting URL --> Driver: ",e)
+            print("-->>> Update your Browser!")
+            os._exit(0)
 
 
     def fetch_image_urls(self, quantity):
